@@ -66,9 +66,6 @@ python -m streamlit run app.py
 
 Aplikasi akan otomatis terbuka di browser pada alamat **`http://localhost:8501`**.
 
----
-
-💡 **Bonus:** Teks ini bisa langsung ditaro di file **`README.md`** di GitHub agar orang lain/dosen bisa langsung mengikuti instruksinya:
 
 ```markdown
 ## 🚀 Cara Menjalankan Aplikasi
