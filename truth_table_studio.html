@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>Truth Table Studio — Parser &amp; Generator Tabel Kebenaran Otomatis</title>
+    <style>
+        :root,
+        body,
+        [data-theme="dark"] {
+            --bg-canvas: #0b0c0e;
+            --bg-surface: #121418;
+            --bg-elevated: #181b20;
+            --bg-hover: #1f232a;
+            --border-hairline: #232730;
+            --border-strong: #343a46;
+            --text-primary: #ededeb;
+            --text-secondary: #9ca3af;
+            --text-muted: #68707e;
+            --accent-primary: #e05a33;
+            --accent-subtle: rgba(224, 90, 51, 0.14);
+            --true-fg: #34d399;
+            --true-bg: rgba(16, 185, 129, 0.14);
+            --true-border: rgba(52, 211, 153, 0.30);
+            --false-fg: #f87171;
+            --false-bg: rgba(239, 68, 68, 0.12);
+            --false-border: rgba(248, 113, 113, 0.26);
+            --sub-col-bg: rgba(255, 255, 255, 0.02);
+            --final-col-bg: rgba(224, 90, 51, 0.07);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+        }
+
+        [data-theme="light"],
+        body[data-theme="light"] {
+            --bg-canvas: #f5f4f0;
+            --bg-surface: #ffffff;
+            --bg-elevated: #faf9f6;
+            --bg-hover: #f0eee9;
+            --border-hairline: #dfddd5;
+            --border-strong: #c7c4b8;
+            --text-primary: #141413;
+            --text-secondary: #52514e;
+            --text-muted: #787670;
+            --accent-primary: #c94620;
+            --accent-subtle: rgba(201, 70, 32, 0.10);
+            --true-fg: #0d7a49;
+            --true-bg: rgba(13, 122, 73, 0.10);
+            --true-border: rgba(13, 122, 73, 0.28);
+            --false-fg: #b91c1c;
+            --false-bg: rgba(185, 28, 28, 0.08);
+            --false-border: rgba(185, 28, 28, 0.22);
+            --sub-col-bg: rgba(20, 20, 19, 0.025);
+            --final-col-bg: rgba(201, 70, 32, 0.065);
+            --shadow-sm: 0 1px 2px rgba(20, 20, 19, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            min-height: 100vh;
+            background-color: var(--bg-canvas);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 160ms ease, color 160ms ease;
+        }
+
+        .mono {
+            font-family: "JetBrains Mono", "SF Mono", "Fira Code", Consolas, monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .app-shell {
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 20px 24px 56px;
+        }
+
+        /* Top Masthead */
+        .masthead {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-hairline);
+            margin-bottom: 18px;
+        }
+
+        .brand-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .brand-mark {
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--border-strong);
+            background: var(--bg-surface);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            padding: 4px;
+            gap: 2px;
+            border-radius: 7px;
+            flex-shrink: 0;
+        }
+
+        .brand-mark span {
+            display: block;
+            border-radius: 2px;
+            background: var(--text-muted);
+        }
+
+        .brand-mark span:nth-child(1) {
+            background: var(--true-fg);
+        }
+
+        .brand-mark span:nth-child(4) {
+            background: var(--accent-primary);
+        }
+
+        .brand-title {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag-pill {
+            font-size: 10.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border-strong);
+            color: var(--text-secondary);
+            background: var(--bg-elevated);
+        }
+
+        .brand-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            line-height: 1.35;
+        }
+
+        .masthead-actions {
+            display: grid;
+            grid-template-columns: repeat(3, auto);
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-hairline);
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 130ms ease;
+        }
+
+        .btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-strong);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Desktop 2-Column vs Mobile Smart Stack */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            grid-template-areas:
+                "input main"
+                "presets main";
+            gap: 18px;
+            align-items: start;
+        }
+
+        .area-input {
+            grid-area: input;
+            min-width: 0;
+        }
+
+        .area-presets {
+            grid-area: presets;
+            min-width: 0;
+        }
+
+        .area-main {
+            grid-area: main;
+            min-width: 0;
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-hairline);
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-hairline);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-elevated);
+        }
+
+        .panel-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-secondary);
+        }
+
+        .panel-body {
+            padding: 14px;
+        }
+
+        /* Input Box */
+        .expr-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .expr-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .expr-input {
+            width: 100%;
+            padding: 10px 34px 10px 12px;
+            font-size: 15px;
+            font-weight: 500;
+            background: var(--bg-canvas);
+            color: var(--text-primary);
+            border: 1px solid var(--border-strong);
+            border-radius: 7px;
+            outline: none;
+        }
+
+        .expr-input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-subtle);
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .norm-preview {
+            margin-top: 8px;
+            padding: 7px 10px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-hairline);
+            border-radius: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .norm-preview-label {
+            color: var(--text-muted);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .norm-preview-val {
+            color: var(--text-primary);
+            font-weight: 600;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .error-banner {
+            margin-top: 8px;
+            padding: 8px 10px;
+            background: var(--false-bg);
+            border: 1px solid var(--false-border);
+            color: var(--false-fg);
+            border-radius: 6px;
+            font-size: 12px;
+            display: none;
+        }
+
+        /* Keypad */
+        .keypad-section {
+            margin-top: 12px;
+        }
+
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .key-btn {
+            padding: 7px 4px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-hairline);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            transition: all 120ms ease;
+        }
+
+        .key-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-strong);
+        }
+
+        .key-btn:active {
+            transform: scale(0.97);
+        }
+
+        .key-main {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .key-sub {
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+
+        /* Mobile Quick Chips (Swipeable Preset Pills inside Input Card) */
+        .quick-chips-wrap {
+            margin-top: 11px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-hairline);
+            display: none;
+        }
+
+        .quick-chips-scroll {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+        }
+
+        .quick-chips-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chip-btn {
+            flex-shrink: 0;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 999px;
+            border: 1px solid var(--border-hairline);
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .chip-btn.active {
+            border-color: var(--accent-primary);
+            background: var(--accent-subtle);
+            color: var(--text-primary);
+        }
+
+        /* Presets Card List */
+        .presets-list {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .preset-item {
+            text-align: left;
+            padding: 9px 11px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-hairline);
+            border-radius: 7px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            width: 100%;
+        }
+
+        .preset-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .preset-item.active {
+            border-color: var(--accent-primary);
+            background: var(--accent-subtle);
+        }
+
+        .preset-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .preset-badge {
+            font-size: 9.5px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-hairline);
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .preset-expr {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Telemetry Strip */
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .metric-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-hairline);
+            border-radius: 8px;
+            padding: 10px 12px;
+            min-width: 0;
+        }
+
+        .metric-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .metric-value {
+            font-size: 15.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .metric-sub {
+            font-size: 10.5px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Toolbar Controls */
+        .table-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--border-hairline);
+            background: var(--bg-elevated);
+        }
+
+        .toolbar-row-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .segmented-group {
+            display: inline-flex;
+            background: var(--bg-canvas);
+            padding: 2px;
+            border-radius: 6px;
+            border: 1px solid var(--border-hairline);
+        }
+
+        .seg-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 5px 9px;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .seg-btn.active {
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Truth Table */
+        .table-scroll {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table.truth-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 12.5px;
+        }
+
+        table.truth-table th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-weight: 700;
+            padding: 9px 10px;
+            border-bottom: 2px solid var(--border-strong);
+            border-right: 1px solid var(--border-hairline);
+            white-space: nowrap;
+        }
+
+        table.truth-table th.col-idx {
+            width: 34px;
+            color: var(--text-muted);
+            font-size: 10.5px;
+        }
+
+        table.truth-table th.col-sub {
+            background: var(--bg-elevated);
+            font-size: 11.5px;
+        }
+
+        table.truth-table th.col-final {
+            background: var(--final-col-bg);
+            color: var(--accent-primary);
+            border-right: none;
+        }
+
+        table.truth-table td {
+            padding: 7px 9px;
+            border-bottom: 1px solid var(--border-hairline);
+            border-right: 1px solid var(--border-hairline);
+        }
+
+        table.truth-table tr:hover td {
+            background-color: var(--bg-hover);
+        }
+
+        table.truth-table td.col-idx {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        table.truth-table td.col-sub {
+            background: var(--sub-col-bg);
+        }
+
+        table.truth-table td.col-final {
+            background: var(--final-col-bg);
+            border-right: none;
+            font-weight: 700;
+        }
+
+        .val-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 11.5px;
+            border: 1px solid transparent;
+        }
+
+        .val-true {
+            color: var(--true-fg);
+            background: var(--true-bg);
+            border-color: var(--true-border);
+        }
+
+        .val-false {
+            color: var(--false-fg);
+            background: var(--false-bg);
+            border-color: var(--false-border);
+        }
+
+        .bottom-tabs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .code-box {
+            background: var(--bg-canvas);
+            border: 1px solid var(--border-hairline);
+            border-radius: 6px;
+            padding: 11px 12px;
+            font-size: 11.5px;
+            color: var(--text-primary);
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.45;
+        }
+
+        .canonical-item {
+            margin-bottom: 10px;
+        }
+
+        .canonical-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .canonical-head {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .canonical-box {
+            padding: 8px 10px;
+            background: var(--bg-canvas);
+            border: 1px solid var(--border-hairline);
+            border-radius: 5px;
+            font-size: 11.5px;
+            word-break: break-word;
+        }
+
+        .footer-meta {
+            margin-top: 24px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-hairline);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 18px;
+            left: 50%;
+            transform: translate(-50%, 10px);
+            background: var(--text-primary);
+            color: var(--bg-canvas);
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 180ms ease;
+            z-index: 999;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        /* ==========================================================================
+       RESPONSIVE MOBILE LAYOUT (HP / LAYAR KECIL <= 960px)
+       ========================================================================== */
+        @media (max-width: 960px) {
+            .app-shell {
+                padding: 12px 12px 36px;
+            }
+
+            .workspace-grid {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "input"
+                    "main"
+                    "presets";
+                gap: 12px;
+            }
+
+            .masthead {
+                gap: 10px;
+                padding-bottom: 10px;
+                margin-bottom: 12px;
+            }
+
+            .masthead-actions {
+                width: 100%;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 6px;
+            }
+
+            .btn {
+                padding: 7px 6px;
+                font-size: 11px;
+            }
+
+            .panel-header {
+                padding: 8px 12px;
+            }
+
+            .panel-body {
+                padding: 11px 12px;
+            }
+
+            .expr-input {
+                font-size: 16px;
+                /* Cegah auto-zoom browser iOS */
+                padding: 9px 32px 9px 10px;
+            }
+
+            .keypad-section {
+                margin-top: 10px;
+            }
+
+            .key-btn {
+                padding: 6px 2px;
+            }
+
+            .quick-chips-wrap {
+                display: block;
+            }
+
+            .telemetry-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 7px;
+                margin-bottom: 10px;
+            }
+
+            .metric-card {
+                padding: 8px 10px;
+            }
+
+            .metric-value {
+                font-size: 14px;
+            }
+
+            .metric-sub {
+                display: none;
+            }
+
+            .table-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+                padding: 8px 10px;
+            }
+
+            .toolbar-row-top {
+                display: grid;
+                grid-template-columns: 1fr 1.15fr;
+                gap: 6px;
+                width: 100%;
+            }
+
+            .segmented-group {
+                display: flex;
+                width: 100%;
+            }
+
+            .seg-btn {
+                flex: 1;
+                text-align: center;
+                padding: 5px 4px;
+                font-size: 10.5px;
+            }
+
+            .bottom-tabs-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                margin-top: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+    <div class="app-shell">
+        <header class="masthead">
+            <div class="brand-block">
+                <div class="brand-mark" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+                <div>
+                    <div class="brand-title">
+                        Truth Table Studio
+                        <span class="tag-pill mono">PJBL-1 · Sesi 2</span>
+                    </div>
+                    <div class="brand-subtitle">
+                        Kelompok F Gyaneswar — Hasdan Fauji, Intan Farida, Riski Maulana
+                    </div>
+                </div>
+            </div>
+
+            <div class="masthead-actions">
+                <button class="btn" id="btnCopyAscii" type="button">Salin Terminal</button>
+                <button class="btn" id="btnExportCsv" type="button">Ekspor CSV</button>
+                <button class="btn" id="btnThemeToggle" type="button">
+                    <span id="themeLabel">Mode Gelap</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="workspace-grid">
+            <!-- 1. PANEL INPUT & OPERATOR -->
+            <section class="panel area-input">
+                <div class="panel-header">
+                    <span class="panel-title">Input Ekspresi Logika</span>
+                    <span class="mono" style="font-size: 10.5px; color: var(--text-muted);">AST Parser</span>
+                </div>
+                <div class="panel-body">
+                    <div class="expr-label">
+                        <span>Rumus Proposisi</span>
+                        <span class="mono" style="font-size: 10.5px; color: var(--text-muted);">Case-insensitive</span>
+                    </div>
+                    <div class="expr-input-wrap">
+                        <input type="text" id="exprInput" class="expr-input mono" value="p AND (q OR NOT r)"
+                            placeholder="Contoh: p AND (q OR NOT r)" autocomplete="off" spellcheck="false" />
+                        <button class="clear-btn" id="btnClear" type="button" title="Kosongkan input">×</button>
+                    </div>
+
+                    <div class="norm-preview">
+                        <span class="norm-preview-label">Kanonik</span>
+                        <span class="norm-preview-val mono" id="normOutput">p AND (q OR NOT r)</span>
+                    </div>
+
+                    <div class="error-banner mono" id="errorBanner"></div>
+
+                    <div class="keypad-section">
+                        <div class="expr-label">
+                            <span>Operator &amp; Simbol Cepat</span>
+                            <span style="font-size: 10.5px; color: var(--text-muted);">Ketuk untuk sisipkan</span>
+                        </div>
+                        <div class="keypad-grid">
+                            <button class="key-btn" type="button" data-insert=" AND ">
+                                <span class="key-main mono">AND</span>
+                                <span class="key-sub">Konjungsi (∧)</span>
+                            </button>
+                            <button class="key-btn" type="button" data-insert=" OR ">
+                                <span class="key-main mono">OR</span>
+                                <span class="key-sub">Disjungsi (∨)</span>
+                            </button>
+                            <button class="key-btn" type="button" data-insert="NOT ">
+                                <span class="key-main mono">NOT</span>
+                                <span class="key-sub">Negasi (¬)</span>
+                            </button>
+                            <button class="key-btn" type="button" data-insert=" XOR ">
+                                <span class="key-main mono">XOR</span>
+                                <span class="key-sub">Eksklusif (⊕)</span>
+                            </button>
+                            <button class="key-btn" type="button" data-insert=" -> ">
+                                <span class="key-main mono">→</span>
+                                <span class="key-sub">Implikasi</span>
+                            </button>
+                            <button class="key-btn" type="button" data-insert=" <-> ">
+                                <span class="key-main mono">↔</span>
+                                <span class="key-sub">Biimplikasi</span>
+                            </button>
+                            <button class="key-btn" type="button" data-insert="(">
+                                <span class="key-main mono">(</span>
+                                <span class="key-sub">Kurung Buka</span>
+                            </button>
+                            <button class="key-btn" type="button" data-insert=")">
+                                <span class="key-main mono">)</span>
+                                <span class="key-sub">Kurung Tutup</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pintasan Kasus Uji Geser untuk Layar HP -->
+                    <div class="quick-chips-wrap">
+                        <div class="quick-chips-scroll">
+                            <button class="chip-btn preset-trigger active" type="button" data-expr="p AND (q OR NOT r)">
+                                Uji 1 PJBL-1
+                            </button>
+                            <button class="chip-btn preset-trigger" type="button"
+                                data-expr="(p AND q) OR (NOT p AND r)">
+                                Uji 2 PJBL-1
+                            </button>
+                            <button class="chip-btn preset-trigger" type="button"
+                                data-expr="NOT (p AND q) <-> (NOT p OR NOT q)">
+                                Hukum De Morgan
+                            </button>
+                            <button class="chip-btn preset-trigger" type="button"
+                                data-expr="((p -> q) AND (q -> r)) -> (p -> r)">
+                                Silogisme
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. TABEL KEBENARAN & RINGKASAN METRIK (Tampil langsung di bawah Input pada HP) -->
+            <main class="area-main">
+                <div class="telemetry-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Variabel Unik (n)</div>
+                        <div class="metric-value mono" id="metricVars">3 (p, q, r)</div>
+                        <div class="metric-sub" id="metricVarsSub">Diurutkan alfabetis</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Kombinasi (2ⁿ)</div>
+                        <div class="metric-value mono" id="metricRows">2^3 = 8</div>
+                        <div class="metric-sub" id="metricRowsSub">8 kombinasi dievaluasi</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Rasio Kebenaran</div>
+                        <div class="metric-value mono" id="metricRatio">3 T / 5 F</div>
+                        <div class="metric-sub" id="metricRatioSub">37.5% bernilai True</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Klasifikasi</div>
+                        <div class="metric-value" id="metricClass">Kontingensi</div>
+                        <div class="metric-sub" id="metricClassSub">Bernilai True dan False</div>
+                    </div>
+                </div>
+
+                <section class="panel">
+                    <div class="table-toolbar">
+                        <div class="toolbar-row-top">
+                            <div class="segmented-group">
+                                <button class="seg-btn active" type="button" data-symbol="TF">T/F</button>
+                                <button class="seg-btn" type="button" data-symbol="10">1/0</button>
+                                <button class="seg-btn" type="button" data-symbol="WORD">T/F Kata</button>
+                            </div>
+
+                            <div class="segmented-group">
+                                <button class="seg-btn active" type="button" data-steps="show">+ Langkah</button>
+                                <button class="seg-btn" type="button" data-steps="hide">Hasil Saja</button>
+                            </div>
+                        </div>
+
+                        <div class="segmented-group">
+                            <button class="seg-btn active" type="button" data-filter="all">Semua Baris</button>
+                            <button class="seg-btn" type="button" data-filter="true">Hanya True</button>
+                            <button class="seg-btn" type="button" data-filter="false">Hanya False</button>
+                        </div>
+                    </div>
+
+                    <div class="table-scroll">
+                        <table class="truth-table mono" id="truthTable">
+                            <thead id="tableHead"></thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <div class="bottom-tabs-grid">
+                    <section class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Bentuk Kanonik (DNF &amp; CNF)</span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="canonical-item">
+                                <div class="canonical-head">Disjunctive Normal Form (DNF — Minterms)</div>
+                                <div class="canonical-box mono" id="dnfBox"></div>
+                            </div>
+                            <div class="canonical-item">
+                                <div class="canonical-head">Conjunctive Normal Form (CNF — Maxterms)</div>
+                                <div class="canonical-box mono" id="cnfBox"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Pratinjau Output Console Python</span>
+                            <button class="btn" id="btnCopyConsoleInline" type="button"
+                                style="padding: 3px 8px; font-size: 11px;">
+                                Salin Teks
+                            </button>
+                        </div>
+                        <div class="panel-body">
+                            <pre class="code-box mono" id="consolePreview"></pre>
+                        </div>
+                    </section>
+                </div>
+            </main>
+
+            <!-- 3. DAFTAR LENGKAP KASUS UJI LAPORAN -->
+            <section class="panel area-presets">
+                <div class="panel-header">
+                    <span class="panel-title">Kasus Uji Laporan &amp; Hukum Logika</span>
+                </div>
+                <div class="panel-body">
+                    <div class="presets-list">
+                        <button class="preset-item preset-trigger active" type="button" data-expr="p AND (q OR NOT r)">
+                            <div class="preset-top">
+                                <span>Pengujian 1 — Laporan PJBL-1</span>
+                                <span class="preset-badge mono">3 Variabel</span>
+                            </div>
+                            <div class="preset-expr mono">p AND (q OR NOT r)</div>
+                        </button>
+
+                        <button class="preset-item preset-trigger" type="button" data-expr="(p AND q) OR (NOT p AND r)">
+                            <div class="preset-top">
+                                <span>Pengujian 2 — Laporan PJBL-1</span>
+                                <span class="preset-badge mono">Kombinasi Kompleks</span>
+                            </div>
+                            <div class="preset-expr mono">(p AND q) OR (NOT p AND r)</div>
+                        </button>
+
+                        <button class="preset-item preset-trigger" type="button"
+                            data-expr="NOT (p AND q) <-> (NOT p OR NOT q)">
+                            <div class="preset-top">
+                                <span>Hukum De Morgan</span>
+                                <span class="preset-badge mono">Tautologi</span>
+                            </div>
+                            <div class="preset-expr mono">NOT (p AND q) &lt;-&gt; (NOT p OR NOT q)</div>
+                        </button>
+
+                        <button class="preset-item preset-trigger" type="button"
+                            data-expr="((p -> q) AND (q -> r)) -> (p -> r)">
+                            <div class="preset-top">
+                                <span>Silogisme Hipotetis</span>
+                                <span class="preset-badge mono">Tautologi</span>
+                            </div>
+                            <div class="preset-expr mono">((p -&gt; q) AND (q -&gt; r)) -&gt; (p -&gt; r)</div>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer-meta">
+            <div><strong>Milestone PJBL-1 (Sesi Ke-2)</strong> · Parser &amp; Generator Tabel Kebenaran Otomatis</div>
+            <div>Referensi: Rinaldi Munir (<em>Matematika Diskrit</em>) · Oscar Levin (<em>Discrete Mathematics</em>)
+            </div>
+        </footer>
+    </div>
+
+    <div class="toast" id="toastMsg">Tersalin ke clipboard</div>
+
+    <script>
+        const RESERVED_KEYWORDS = new Set([
+            "AND", "OR", "NOT", "XOR", "NAND", "NOR", "IMPLIES", "IFF", "TRUE", "FALSE"
+        ]);
+
+        function normalizeExpression(raw) {
+            if (!raw || !raw.trim()) throw new Error("Ekspresi logika tidak boleh kosong.");
+            let expr = raw.trim();
+            expr = expr.replace(/<->|<=>|↔|≡/g, " IFF ");
+            expr = expr.replace(/->|=>|→|⇒/g, " IMPLIES ");
+            expr = expr.replace(/&&|&|∧/g, " AND ");
+            expr = expr.replace(/\|\||\|+|∨/g, " OR ");
+            expr = expr.replace(/!|~|¬/g, " NOT ");
+            expr = expr.replace(/\^|⊕|≢/g, " XOR ");
+
+            const wordOps = ["AND", "OR", "NOT", "XOR", "NAND", "NOR", "IMPLIES", "IFF", "TRUE", "FALSE"];
+            for (const op of wordOps) {
+                const re = new RegExp("\\b" + op + "\\b", "gi");
+                expr = expr.replace(re, op);
+            }
+            expr = expr.replace(/\(\s*/g, "(").replace(/\s*\)/g, ")");
+            return expr.replace(/\s+/g, " ").trim();
+        }
+
+        function tokenize(normalized) {
+            const tokenRegex = /\(|\)|[A-Za-z_]\w*/g;
+            const tokens = normalized.match(tokenRegex) || [];
+            const leftover = normalized.replace(tokenRegex, "").trim();
+            if (leftover.length > 0) throw new Error('Karakter tidak dikenali: "' + leftover + '"');
+            return tokens;
+        }
+
+        function extractVariables(tokens) {
+            const set = new Set();
+            for (const tok of tokens) {
+                if (/^[A-Za-z_]\w*$/.test(tok) && !RESERVED_KEYWORDS.has(tok.toUpperCase())) {
+                    set.add(tok);
+                }
+            }
+            return Array.from(set).sort();
+        }
+
+        function precedence(op) {
+            return { IFF: 1, IMPLIES: 2, OR: 3, NOR: 3, XOR: 4, AND: 5, NAND: 5, NOT: 6 }[op] || 0;
+        }
+
+        function parseTokens(tokens) {
+            let pos = 0;
+            const peek = () => (pos < tokens.length ? tokens[pos] : null);
+            const consume = (expected = null) => {
+                const tok = peek();
+                if (tok === null) throw new Error("Ekspresi berakhir secara tidak terduga.");
+                if (expected !== null && tok !== expected) {
+                    throw new Error("Diharapkan '" + expected + "', tetapi ditemukan '" + tok + "'.");
+                }
+                pos++;
+                return tok;
+            };
+
+            function toCanonical(node) {
+                if (node.type === "VAR") return node.name;
+                if (node.type === "CONST") return node.value ? "TRUE" : "FALSE";
+                if (node.type === "UNARY") {
+                    const inner = toCanonical(node.operand);
+                    return node.operand.type === "BINARY" ? "NOT (" + inner + ")" : "NOT " + inner;
+                }
+                if (node.type === "BINARY") {
+                    let lStr = toCanonical(node.left);
+                    let rStr = toCanonical(node.right);
+                    if (node.left.type === "BINARY" && precedence(node.left.op) < precedence(node.op)) {
+                        lStr = "(" + lStr + ")";
+                    }
+                    if (node.right.type === "BINARY" && precedence(node.right.op) <= precedence(node.op)) {
+                        if (!(node.right.op === node.op && ["AND", "OR", "XOR"].includes(node.op))) {
+                            rStr = "(" + rStr + ")";
+                        }
+                    }
+                    return lStr + " " + node.op + " " + rStr;
+                }
+                return "";
+            }
+
+            function evaluateNode(node, env) {
+                if (node.type === "VAR") return Boolean(env[node.name]);
+                if (node.type === "CONST") return Boolean(node.value);
+                if (node.type === "UNARY") return !evaluateNode(node.operand, env);
+                if (node.type === "BINARY") {
+                    const l = evaluateNode(node.left, env);
+                    const r = evaluateNode(node.right, env);
+                    switch (node.op) {
+                        case "AND": return l && r;
+                        case "OR": return l || r;
+                        case "XOR": return l !== r;
+                        case "NAND": return !(l && r);
+                        case "NOR": return !(l || r);
+                        case "IMPLIES": return !l || r;
+                        case "IFF": return l === r;
+                        default: return false;
+                    }
+                }
+                return false;
+            }
+
+            function parseIff() {
+                let node = parseImplies();
+                while (peek() === "IFF") {
+                    const op = consume();
+                    node = { type: "BINARY", op, left: node, right: parseImplies() };
+                }
+                return node;
+            }
+
+            function parseImplies() {
+                let node = parseOr();
+                if (peek() === "IMPLIES") {
+                    const op = consume();
+                    node = { type: "BINARY", op, left: node, right: parseImplies() };
+                }
+                return node;
+            }
+
+            function parseOr() {
+                let node = parseXor();
+                while (peek() === "OR" || peek() === "NOR") {
+                    const op = consume();
+                    node = { type: "BINARY", op, left: node, right: parseXor() };
+                }
+                return node;
+            }
+
+            function parseXor() {
+                let node = parseAnd();
+                while (peek() === "XOR") {
+                    const op = consume();
+                    node = { type: "BINARY", op, left: node, right: parseAnd() };
+                }
+                return node;
+            }
+
+            function parseAnd() {
+                let node = parseUnary();
+                while (peek() === "AND" || peek() === "NAND") {
+                    const op = consume();
+                    node = { type: "BINARY", op, left: node, right: parseUnary() };
+                }
+                return node;
+            }
+
+            function parseUnary() {
+                if (peek() === "NOT") {
+                    const op = consume();
+                    return { type: "UNARY", op, operand: parseUnary() };
+                }
+                return parsePrimary();
+            }
+
+            function parsePrimary() {
+                const tok = peek();
+                if (tok === null) throw new Error("Diharapkan variabel atau tanda kurung.");
+                if (tok === "(") {
+                    consume("(");
+                    const node = parseIff();
+                    if (peek() !== ")") throw new Error("Kurung tutup ')' belum lengkap.");
+                    consume(")");
+                    return node;
+                }
+                if (tok === ")") throw new Error("Kurung tutup ')' tanpa kurung buka.");
+                if (RESERVED_KEYWORDS.has(tok.toUpperCase()) && tok !== "TRUE" && tok !== "FALSE") {
+                    throw new Error("Operator '" + tok + "' berada pada posisi yang salah.");
+                }
+                consume();
+                if (tok === "TRUE") return { type: "CONST", value: true };
+                if (tok === "FALSE") return { type: "CONST", value: false };
+                return { type: "VAR", name: tok };
+            }
+
+            const root = parseIff();
+            if (peek() !== null) throw new Error("Token berlebih di dekat '" + peek() + "'.");
+
+            const subNodes = [];
+            const seen = new Set();
+            function collect(n) {
+                if (n.type === "UNARY") collect(n.operand);
+                if (n.type === "BINARY") { collect(n.left); collect(n.right); }
+                if (n.type === "UNARY" || n.type === "BINARY") {
+                    const label = toCanonical(n);
+                    if (!seen.has(label)) {
+                        seen.add(label);
+                        subNodes.push({ label, node: n });
+                    }
+                }
+            }
+            collect(root);
+            return { root, subNodes, evaluateNode };
+        }
+
+        function buildTruthTableData(rawExpr) {
+            const normalized = normalizeExpression(rawExpr);
+            const tokens = tokenize(normalized);
+            const variables = extractVariables(tokens);
+            if (variables.length > 8) throw new Error("Maksimal 8 variabel (256 baris).");
+
+            const { root, subNodes, evaluateNode } = parseTokens(tokens);
+            const intermediateNodes = subNodes.length > 1 ? subNodes.slice(0, -1) : [];
+
+            const n = variables.length;
+            const totalRows = Math.pow(2, n);
+            const rows = [];
+            let trueCount = 0;
+            const minterms = [];
+            const maxterms = [];
+
+            for (let i = 0; i < totalRows; i++) {
+                const env = {};
+                for (let vIdx = 0; vIdx < n; vIdx++) {
+                    env[variables[vIdx]] = ((i >> (n - 1 - vIdx)) & 1) === 0;
+                }
+                const subVals = intermediateNodes.map((item) => evaluateNode(item.node, env));
+                const finalVal = evaluateNode(root, env);
+                rows.push({ index: i + 1, env, subVals, finalVal });
+
+                if (finalVal) {
+                    trueCount++;
+                    if (n > 0) {
+                        const parts = variables.map((v) => (env[v] ? v : "NOT " + v));
+                        minterms.push(parts.length > 1 ? "(" + parts.join(" AND ") + ")" : parts[0]);
+                    }
+                } else if (n > 0) {
+                    const parts = variables.map((v) => (env[v] ? "NOT " + v : v));
+                    maxterms.push(parts.length > 1 ? "(" + parts.join(" OR ") + ")" : parts[0]);
+                }
+            }
+
+            const falseCount = totalRows - trueCount;
+            let classification = "Kontingensi";
+            let classDesc = "Bernilai True dan False tergantung input";
+            if (trueCount === totalRows) {
+                classification = "Tautologi";
+                classDesc = "Selalu bernilai Benar (True) di semua baris";
+            } else if (falseCount === totalRows) {
+                classification = "Kontradiksi";
+                classDesc = "Selalu bernilai Salah (False) di semua baris";
+            }
+
+            return {
+                rawExpr,
+                normalized,
+                variables,
+                subLabels: intermediateNodes.map((x) => x.label),
+                rows,
+                trueCount,
+                falseCount,
+                totalRows,
+                classification,
+                classDesc,
+                dnf: minterms.length ? minterms.join(" OR ") : "FALSE",
+                cnf: maxterms.length ? maxterms.join(" AND ") : "TRUE"
+            };
+        }
+
+        const state = { symbolMode: "TF", showSteps: true, rowFilter: "all", lastValidData: null };
+
+        function formatSymbol(val) {
+            if (state.symbolMode === "10") return val ? "1" : "0";
+            if (state.symbolMode === "WORD") return val ? "True" : "False";
+            return val ? "T" : "F";
+        }
+
+        function padCenter(str, w) {
+            const s = String(str);
+            if (s.length >= w) return s;
+            const left = Math.floor((w - s.length) / 2);
+            return " ".repeat(left) + s + " ".repeat(w - s.length - left);
+        }
+
+        function buildUnicodeConsoleText(data) {
+            const subCols = state.showSteps ? data.subLabels : [];
+            const headers = [...data.variables, ...subCols, data.normalized];
+            const colWidths = headers.map((h) => Math.max(h.length, 3) + 2);
+            const border = (l, m, r, fill) => l + colWidths.map((w) => fill.repeat(w)).join(m) + r;
+
+            const lines = [
+                border("┌", "┬", "┐", "─"),
+                "│" + headers.map((h, i) => padCenter(h, colWidths[i])).join("│") + "│",
+                border("╞", "╪", "╡", "═")
+            ];
+
+            for (const r of data.rows) {
+                const cells = data.variables.map((v, i) => padCenter(formatSymbol(r.env[v]), colWidths[i]));
+                if (state.showSteps) {
+                    r.subVals.forEach((sv, i) => cells.push(padCenter(formatSymbol(sv), colWidths[data.variables.length + i])));
+                }
+                cells.push(padCenter(formatSymbol(r.finalVal), colWidths[colWidths.length - 1]));
+                lines.push("│" + cells.join("│") + "│");
+            }
+            lines.push(border("└", "┴", "┘", "─"));
+            return lines.join("\n");
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("toastMsg");
+            toast.textContent = msg;
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 2000);
+        }
+
+        function renderApp() {
+            const exprInput = document.getElementById("exprInput");
+            const errorBanner = document.getElementById("errorBanner");
+            const raw = exprInput.value;
+            try {
+                const data = buildTruthTableData(raw);
+                state.lastValidData = data;
+                errorBanner.style.display = "none";
+                document.getElementById("normOutput").textContent = data.normalized;
+
+                const n = data.variables.length;
+                document.getElementById("metricVars").textContent = n > 0 ? n + " (" + data.variables.join(", ") + ")" : "0";
+                document.getElementById("metricRows").textContent = "2^" + n + " = " + data.totalRows;
+                document.getElementById("metricRatio").textContent = data.trueCount + " T / " + data.falseCount + " F";
+                document.getElementById("metricRatioSub").textContent = ((data.trueCount / data.totalRows) * 100).toFixed(1) + "% bernilai True";
+                document.getElementById("metricClass").textContent = data.classification;
+                document.getElementById("metricClassSub").textContent = data.classDesc;
+
+                const subCols = state.showSteps ? data.subLabels : [];
+                let thHtml = '<tr><th class="col-idx">#</th>';
+                data.variables.forEach((v) => { thHtml += "<th>" + v + "</th>"; });
+                subCols.forEach((s) => { thHtml += '<th class="col-sub">' + s + "</th>"; });
+                thHtml += '<th class="col-final">' + data.normalized + "</th></tr>";
+                document.getElementById("tableHead").innerHTML = thHtml;
+
+                const filteredRows = data.rows.filter((r) => {
+                    if (state.rowFilter === "true") return r.finalVal;
+                    if (state.rowFilter === "false") return !r.finalVal;
+                    return true;
+                });
+
+                let tbHtml = "";
+                for (const r of filteredRows) {
+                    tbHtml += '<tr><td class="col-idx">' + r.index + "</td>";
+                    data.variables.forEach((v) => {
+                        const val = r.env[v];
+                        tbHtml += '<td><span class="val-badge ' + (val ? "val-true" : "val-false") + '">' + formatSymbol(val) + "</span></td>";
+                    });
+                    if (state.showSteps) {
+                        r.subVals.forEach((sv) => {
+                            tbHtml += '<td class="col-sub"><span class="val-badge ' + (sv ? "val-true" : "val-false") + '">' + formatSymbol(sv) + "</span></td>";
+                        });
+                    }
+                    tbHtml += '<td class="col-final"><span class="val-badge ' + (r.finalVal ? "val-true" : "val-false") + '">' + formatSymbol(r.finalVal) + "</span></td></tr>";
+                }
+                document.getElementById("tableBody").innerHTML = tbHtml;
+                document.getElementById("dnfBox").textContent = data.dnf;
+                document.getElementById("cnfBox").textContent = data.cnf;
+                document.getElementById("consolePreview").textContent = buildUnicodeConsoleText(data);
+
+                document.querySelectorAll(".preset-trigger").forEach((btn) => {
+                    btn.classList.toggle("active", btn.dataset.expr.trim() === raw.trim());
+                });
+            } catch (err) {
+                errorBanner.textContent = err.message;
+                errorBanner.style.display = "block";
+            }
+        }
+
+        document.getElementById("exprInput").addEventListener("input", renderApp);
+        document.getElementById("btnClear").addEventListener("click", () => {
+            document.getElementById("exprInput").value = "";
+            document.getElementById("exprInput").focus();
+            renderApp();
+        });
+
+        document.querySelectorAll(".key-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const input = document.getElementById("exprInput");
+                const text = btn.dataset.insert;
+                const start = input.selectionStart ?? input.value.length;
+                const end = input.selectionEnd ?? input.value.length;
+                input.value = input.value.slice(0, start) + text + input.value.slice(end);
+                input.focus();
+                input.setSelectionRange(start + text.length, start + text.length);
+                renderApp();
+            });
+        });
+
+        document.querySelectorAll(".preset-trigger").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                document.getElementById("exprInput").value = btn.dataset.expr;
+                renderApp();
+            });
+        });
+
+        document.querySelectorAll("[data-symbol]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll("[data-symbol]").forEach((b) => b.classList.remove("active"));
+                btn.classList.add("active");
+                state.symbolMode = btn.dataset.symbol;
+                renderApp();
+            });
+        });
+
+        document.querySelectorAll("[data-steps]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll("[data-steps]").forEach((b) => b.classList.remove("active"));
+                btn.classList.add("active");
+                state.showSteps = btn.dataset.steps === "show";
+                renderApp();
+            });
+        });
+
+        document.querySelectorAll("[data-filter]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll("[data-filter]").forEach((b) => b.classList.remove("active"));
+                btn.classList.add("active");
+                state.rowFilter = btn.dataset.filter;
+                renderApp();
+            });
+        });
+
+        document.getElementById("btnThemeToggle").addEventListener("click", () => {
+            const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            document.body.setAttribute("data-theme", next);
+            document.getElementById("themeLabel").textContent = next === "dark" ? "Mode Terang" : "Mode Gelap";
+        });
+
+        function copyConsole() {
+            if (!state.lastValidData) return;
+            navigator.clipboard.writeText(buildUnicodeConsoleText(state.lastValidData));
+            showToast("Tabel terminal berhasil disalin");
+        }
+
+        document.getElementById("btnCopyAscii").addEventListener("click", copyConsole);
+        document.getElementById("btnCopyConsoleInline").addEventListener("click", copyConsole);
+
+        document.getElementById("btnExportCsv").addEventListener("click", () => {
+            if (!state.lastValidData) return;
+            const d = state.lastValidData;
+            const subCols = state.showSteps ? d.subLabels : [];
+            const headers = [...d.variables, ...subCols, d.normalized];
+            const rows = [headers.map((h) => '"' + h + '"').join(",")];
+            for (const r of d.rows) {
+                const vals = d.variables.map((v) => formatSymbol(r.env[v]));
+                if (state.showSteps) r.subVals.forEach((sv) => vals.push(formatSymbol(sv)));
+                vals.push(formatSymbol(r.finalVal));
+                rows.push(vals.join(","));
+            }
+            const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "tabel_kebenaran_pjbl1.csv";
+            a.click();
+            showToast("File CSV berhasil diunduh");
+        });
+
+        renderApp();
+    </script>
+</body>
+
+</html>
